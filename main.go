@@ -3,9 +3,11 @@ package main
 import (
 	"felixfern/go-hello/area"
 	"felixfern/go-hello/concurrency"
+	"felixfern/go-hello/counter"
 	"felixfern/go-hello/dictionary"
 	"felixfern/go-hello/wallet"
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -75,4 +77,38 @@ func main() {
 
 	concurrency.CheckWebsites(mockWebsiteChecker, websites)
 	concurrency.CheckWebsitesConcurrent(mockWebsiteChecker, websites)
+
+	counter_1 := counter.Counter{Value: 0}
+	counter_2 := counter.Counter{Value: 0}
+	loops := 1000
+
+	// Without Mutex
+	var wg_1 sync.WaitGroup
+	wg_1.Add(loops)
+
+	for i := 0; i < loops; i++ {
+		go func() {
+			counter_1.Inc()
+			wg_1.Done()
+		}()
+	}
+
+	wg_1.Wait()
+
+	fmt.Println(counter_1.GetValue())
+
+	// With Mutex
+	var wg_2 sync.WaitGroup
+	wg_2.Add(loops)
+	for i := 0; i < loops; i++ {
+		go func() {
+			counter_2.IncMutex()
+			wg_2.Done()
+		}()
+	}
+
+	wg_2.Wait()
+
+	fmt.Println(counter_2.GetValue())
+
 }
